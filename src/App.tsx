@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { FormattedMessage, useIntl } from "react-intl";
+
 import {
   LoginButton,
   useSession,
@@ -23,25 +25,58 @@ import {
 
 import { SCHEMA_INRUPT, RDF, AS } from "@inrupt/vocab-common-rdf";
 
-export default function App() {
+import {QRCodeSVG} from 'qrcode.react';
+
+export default function App({ onLocaleChanged }) {
   const { session } = useSession();
+  const intl = useIntl();
+
+  const [numState, setNumState] = useState(5);
+  
 
   return (
     <>
-      {!session.info.isLoggedIn && <Login />}
+    <QRCodeSVG
+  value={"https://picturesofpeoplescanningqrcodes.tumblr.com/"}
+  size={128}
+  bgColor={"#ffffff"}
+  fgColor={"#000000"}
+  level={"M"}
+  includeMargin={false}
+  imageSettings={{
+    src: "https://static.zpao.com/favicon.png",
+    x: undefined,
+    y: undefined,
+    height: 24,
+    width: 24,
+    excavate: true,
+  }}
+/>
+    <button className="app__link" onClick={() => onLocaleChanged("en-US")}>
+          English
+        </button>
+        <button className="app__link" onClick={() => onLocaleChanged("ar-EG")}>
+          Arabic
+        </button>
+        <FormattedMessage id="demo" />
+
+        <p>State: {numState}</p>
+    <button onClick={() => {setNumState(numState + 1)}}>state++</button> <br/>
+    
+
+      {!session.info.isLoggedIn && <Login numState={numState} />}
       <hr/>
-      {session.info.isLoggedIn && <WriteToPod/>}
+      {session.info.isLoggedIn && <WriteToPod />}
     </>
   );
 }
 
-function Login() {
+function Login({ numState }) {
   const identityProviders: string[] = ['https://solidcommunity.net/', 'https://login.inrupt.com/', 
     'https://inrupt.net/', 'https://solidweb.org/'];
 
   const { session } = useSession();
   const [selectedOption, setSelectedOption] = useState('Select an identity provider');
-  const userIsLoggedIn = session.info.isLoggedIn;
 
   return (
     <>
@@ -63,7 +98,7 @@ function Login() {
         </select>
         <LoginButton
           oidcIssuer={selectedOption}
-          redirectUrl={window.location.href}
+          redirectUrl={window.location.href + "?numState=" + numState}
         >
           <button disabled={selectedOption === 'Select an identity provider'}>
             Log in
@@ -84,6 +119,8 @@ function WriteToPod() {
   const [selectedPodUrl, setSelectedPodUrl] = useState(POD_URLS_INITIAL_VALUE);
 
   const [textInput, setTextInput] = useState('');
+
+  const queryString = window.location.search;
 
   async function handleGetPodUrls() {
       const webID = session.info.webId;
@@ -130,6 +167,7 @@ function WriteToPod() {
 
   return (
     <>
+    <p>{"State: " + window.location.search}</p>
       <div>
         Your webID is: {session.info.webId}
       </div>
